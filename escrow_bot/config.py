@@ -1,4 +1,4 @@
-TOKEN = "your_bot_token_here"
-LOG_GROUP_ID = -1001234567890  # Your Log Group ID
-ADMINS = [12345678, 87654321]  # Admin Telegram User IDs
+TOKEN = "7338899561:AAHfbMcJyszWI5lI7VPCt5PRJBz9h7R33Xc"
+LOG_GROUP_ID = -1002477649312  # Your Log Group ID
+ADMINS = [6748827895, 6625622322]  # Admin Telegram User IDs
 
