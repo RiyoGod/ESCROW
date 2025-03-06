@@ -5,14 +5,10 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from config import TOKEN, LOGS_CHAT_ID, ADMINS
 
-bot = Bot(token=TOKEN, parse_mode=ParseMode.MARKDOWN_V2)
+bot = Bot(token=TOKEN, parse_mode=ParseMode.MARKDOWN)
 dp = Dispatcher()
 
 active_deals = {}
-
-def escape_markdown_v2(text):
-    escape_chars = r"*_[]()~`>#+-=|{}.!<>"
-    return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
 
 @dp.message(Command("create"))
 async def create_command(message: Message):
@@ -21,11 +17,11 @@ async def create_command(message: Message):
     
     deal_form = (
         "Fill the deal form in this format:\n\n"
-        "`Seller : @username`\n"
-        "`Buyer : @username`\n"
-        "`Deal Info : (short details)`\n"
-        "`Amount (In USDT) : amount`\n"
-        "`Time To Complete : time`\n\n"
+        "*Seller:* @username\n"
+        "*Buyer:* @username\n"
+        "*Deal Info:* (short details)\n"
+        "*Amount (In USDT):* amount\n"
+        "*Time To Complete:* time\n\n"
         "Copy the format, fill it, and send it in this group."
     )
     await message.reply(deal_form)
@@ -64,13 +60,13 @@ async def handle_form(message: Message):
     }
 
     form_text = (
-        f"✅ Form Received!\n\n"
-        f"*Seller:* {escape_markdown_v2(seller)}\n"
-        f"*Buyer:* {escape_markdown_v2(buyer)}\n"
-        f"*Deal Info:* {escape_markdown_v2(deal_info)}\n"
-        f"*Amount:* {escape_markdown_v2(amount)} USDT\n"
-        f"*Time to Complete:* {escape_markdown_v2(time_to_complete)} hours\n\n"
-        f"Both of you confirm your roles by clicking the buttons below:"
+        "✅ Form Received!\n\n"
+        f"*Seller:* {seller}\n"
+        f"*Buyer:* {buyer}\n"
+        f"*Deal Info:* {deal_info}\n"
+        f"*Amount:* {amount} USDT\n"
+        f"*Time to Complete:* {time_to_complete} hours\n\n"
+        "Both of you confirm your roles by clicking the buttons below:"
     )
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
