@@ -71,9 +71,10 @@ async def form_handler(message: types.Message):
     )
 
     buttons = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=f"{seller} (Seller)", callback_data=f"confirm_{deal_id}_seller")],
-        [InlineKeyboardButton(text=f"{buyer} (Buyer)", callback_data=f"confirm_{deal_id}_buyer")]
-    ])
+    [InlineKeyboardButton(text=f"{escape_md_v2(seller)} \\(Seller\\)", callback_data=f"confirm_{deal_id}_seller")],
+    [InlineKeyboardButton(text=f"{escape_md_v2(buyer)} \\(Buyer\\)", callback_data=f"confirm_{deal_id}_buyer")]
+])
+
 
     sent_message = await message.reply(form_text, reply_markup=buttons)
 
@@ -118,10 +119,11 @@ async def handle_fees_selection(message: types.Message, deal_id: str):
 
     text = "Who will pay the 2% escrow fee?"
     buttons = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=f"{seller} - I Pay Full", callback_data=f"fees_{deal_id}_seller")],
-        [InlineKeyboardButton(text=f"{buyer} - I Pay Full", callback_data=f"fees_{deal_id}_buyer")],
-        [InlineKeyboardButton(text="Split 50/50", callback_data=f"fees_{deal_id}_split")]
-    ])
+    [InlineKeyboardButton(text=f"{escape_md_v2(seller)} \\- I Pay Full", callback_data=f"fees_{deal_id}_seller")],
+    [InlineKeyboardButton(text=f"{escape_md_v2(buyer)} \\- I Pay Full", callback_data=f"fees_{deal_id}_buyer")],
+    [InlineKeyboardButton(text="Split 50/50", callback_data=f"fees_{deal_id}_split")]
+])
+
     await message.answer(text, reply_markup=buttons)
 
 @dp.callback_query()
