@@ -12,26 +12,26 @@ active_deals = {}
 
 @dp.message(Command("create"))
 async def create_command(message: Message):
-    if not message.chat.type in ["group", "supergroup"]:
+    if message.chat.type not in ["group", "supergroup"]:
         return await message.reply("This command only works inside a group.")
     
-    deal_form = (
+    form_text = (
         "Fill the deal form in this format:\n\n"
         "*Seller:* @username\n"
         "*Buyer:* @username\n"
         "*Deal Info:* (short details)\n"
         "*Amount (In USDT):* amount\n"
         "*Time To Complete:* time\n\n"
-        "Copy the format, fill it, and send it in this group."
+        "Copy, fill it, and send it here."
     )
-    await message.reply(deal_form)
+    await message.reply(form_text)
 
 @dp.message()
 async def handle_form(message: Message):
-    if not message.text or not message.chat.type in ["group", "supergroup"]:
+    if message.chat.type not in ["group", "supergroup"]:
         return
 
-    lines = message.text.split("\n")
+    lines = message.text.strip().split("\n")
     if len(lines) < 5:
         return
 
@@ -44,19 +44,15 @@ async def handle_form(message: Message):
     except IndexError:
         return
 
-    if not (seller.startswith("@") and buyer.startswith("@")):
+    if not seller.startswith("@") or not buyer.startswith("@"):
         return
 
     deal_id = f"DEAL-{message.chat.id}-{message.message_id}"
-
     active_deals[deal_id] = {
         "seller": seller,
         "buyer": buyer,
-        "amount": amount,
-        "time": time_to_complete,
         "confirmed": {"seller": False, "buyer": False},
-        "fees": None,
-        "pinned_message_id": None
+        "fees": None
     }
 
     form_text = (
@@ -66,7 +62,7 @@ async def handle_form(message: Message):
         f"*Deal Info:* {deal_info}\n"
         f"*Amount:* {amount} USDT\n"
         f"*Time to Complete:* {time_to_complete} hours\n\n"
-        "Both of you confirm your roles by clicking the buttons below:"
+        "Both of you confirm your roles below:"
     )
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -75,80 +71,75 @@ async def handle_form(message: Message):
     ])
 
     sent_message = await message.reply(form_text, reply_markup=keyboard)
-
-    # Log group forward
     await bot.send_message(LOGS_CHAT_ID, form_text)
 
 @dp.callback_query()
-async def callback_handler(callback: types.CallbackQuery):
-    data = callback.data
-    if not data.startswith("confirm_") and not data.startswith("fees_"):
+async def confirm_callback(callback: types.CallbackQuery):
+    parts = callback.data.split("_")
+    if len(parts) != 3:
         return
 
-    parts = data.split("_")
-    action, deal_id, role = parts[0], parts[1], parts[2]
+    action, deal_id, role = parts
 
     if deal_id not in active_deals:
-        return await callback.answer("This deal is no longer active.")
+        return await callback.answer("This deal no longer exists.")
 
     deal = active_deals[deal_id]
-    if role == "seller" and callback.from_user.username != deal["seller"][1:]:
-        return await callback.answer("Only the seller can confirm this.")
-    if role == "buyer" and callback.from_user.username != deal["buyer"][1:]:
-        return await callback.answer("Only the buyer can confirm this.")
+    username = callback.from_user.username
+
+    if role == "seller" and username != deal["seller"][1:]:
+        return await callback.answer("Only the seller can confirm.")
+    if role == "buyer" and username != deal["buyer"][1:]:
+        return await callback.answer("Only the buyer can confirm.")
 
     if deal["confirmed"][role]:
         return await callback.answer("You already confirmed.")
 
     deal["confirmed"][role] = True
 
+    text = callback.message.text + f"\n✅ {role.capitalize()} Confirmed!"
+
     if deal["confirmed"]["seller"] and deal["confirmed"]["buyer"]:
-        # Both confirmed
-        fees_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        text += "\n\n✅ Both Confirmed! Choose who pays the fees:"
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Split (Both Pay 1% Each)", callback_data=f"fees_{deal_id}_split")],
             [InlineKeyboardButton(text="Mine (I Pay Full 2%)", callback_data=f"fees_{deal_id}_mine")]
         ])
-        await callback.message.edit_text(callback.message.text + "\n\n✅ Both Confirmed! Choose who pays the fees:", reply_markup=fees_keyboard)
+        await callback.message.edit_text(text, reply_markup=keyboard)
     else:
-        await callback.message.edit_text(callback.message.text + f"\n\n✅ {role.capitalize()} Confirmed!")
+        await callback.message.edit_text(text, reply_markup=callback.message.reply_markup)
 
     await callback.answer()
 
 @dp.callback_query()
-async def fees_handler(callback: types.CallbackQuery):
-    data = callback.data
-    if not data.startswith("fees_"):
+async def fees_callback(callback: types.CallbackQuery):
+    parts = callback.data.split("_")
+    if len(parts) != 3:
         return
 
-    parts = data.split("_")
-    _, deal_id, fees_type = parts
+    action, deal_id, fees_type = parts
 
     if deal_id not in active_deals:
-        return await callback.answer("This deal is no longer active.")
+        return await callback.answer("This deal no longer exists.")
 
     deal = active_deals[deal_id]
-    if callback.from_user.username not in (deal["seller"][1:], deal["buyer"][1:]):
-        return await callback.answer("Only the seller or buyer can choose fees.")
+    username = callback.from_user.username
+
+    if username not in [deal["seller"][1:], deal["buyer"][1:]]:
+        return await callback.answer("Only seller or buyer can choose fees.")
 
     if deal["fees"] is not None:
-        return await callback.answer("Fees choice already locked.")
+        return await callback.answer("Fees already chosen.")
 
     deal["fees"] = fees_type
 
     if fees_type == "split":
-        await callback.message.edit_text(callback.message.text + "\n\n✅ Fees split 1% each!")
+        text = callback.message.text + "\n\n✅ Fees Split! Each pays 1%."
     else:
-        payer = "Seller" if callback.from_user.username == deal["seller"][1:] else "Buyer"
-        await callback.message.edit_text(callback.message.text + f"\n\n✅ {payer} chose to pay full 2% fees!")
+        payer = "Seller" if username == deal["seller"][1:] else "Buyer"
+        text = callback.message.text + f"\n\n✅ {payer} chose to pay full 2% fees."
 
-    # Remove buttons after selection
-    await callback.message.edit_reply_markup(reply_markup=None)
-
-    # Pin the message with "Ongoing Deal"
-    pinned_text = callback.message.text + "\n\n🚀 *On Going Deal!*"
-    pinned_message = await callback.message.edit_text(pinned_text)
-    deal["pinned_message_id"] = pinned_message.message_id
-
+    await callback.message.edit_text(text + "\n\n🚀 *On Going Deal!*", reply_markup=None)
     await callback.answer()
 
 async def main():
