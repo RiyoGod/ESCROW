@@ -1,8 +1,8 @@
 import asyncio
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode
+from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from config import TOKEN, LOGS_CHAT_ID, ADMINS
 
 bot = Bot(token=TOKEN, parse_mode=ParseMode.MARKDOWN_V2)
@@ -15,7 +15,7 @@ def escape_md_v2(text: str) -> str:
     escape_chars = r"_*[]()~`>#+-=|{}.!"
     return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
 
-@dp.message(commands=["create"])
+@dp.message(Command("create"))
 async def create_command(message: types.Message):
     await message.reply(
         "✍️ Fill the form below and send it back to me:\n\n"
@@ -26,11 +26,8 @@ async def create_command(message: types.Message):
         "`Time To Complete :`"
     )
 
-@dp.message()
+@dp.message(F.text.startswith("Seller :"))
 async def form_handler(message: types.Message):
-    if not (message.text.startswith("Seller :") and "Buyer :" in message.text):
-        return
-
     form_lines = message.text.strip().split("\n")
     if len(form_lines) < 5:
         await message.reply("Invalid form format! Please try again.")
@@ -70,12 +67,11 @@ async def form_handler(message: types.Message):
         [InlineKeyboardButton(text=f"{escape_md_v2(buyer)} \\(Buyer\\)", callback_data=f"confirm_{deal_id}_buyer")]
     ])
 
-    # Forward form to logs group
     await bot.send_message(LOGS_CHAT_ID, f"New deal created:\n\n{escape_md_v2(message.text)}")
 
     await message.reply(form_text, reply_markup=buttons)
 
-@dp.callback_query(lambda c: c.data.startswith("confirm_"))
+@dp.callback_query(F.data.startswith("confirm_"))
 async def confirm_role(callback: types.CallbackQuery):
     _, deal_id, role = callback.data.split("_")
     deal = active_deals.get(deal_id)
@@ -115,7 +111,7 @@ async def handle_fees_selection(message: types.Message, deal_id: str):
         reply_markup=buttons
     )
 
-@dp.callback_query(lambda c: c.data.startswith("fees_"))
+@dp.callback_query(F.data.startswith("fees_"))
 async def confirm_fees(callback: types.CallbackQuery):
     _, deal_id, fees_choice = callback.data.split("_")
     deal = active_deals.get(deal_id)
@@ -147,7 +143,6 @@ async def confirm_fees(callback: types.CallbackQuery):
 
     await callback.answer("Fees confirmed!")
 
-    # Pin this deal message
     chat_id = callback.message.chat.id
     await bot.pin_chat_message(chat_id, callback.message.message_id)
 
