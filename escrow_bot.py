@@ -167,3 +167,9 @@ async def finalize_deal(chat_id, message_id, deal):
     sent = await bot.send_message(chat_id, pinned_message, parse_mode=ParseMode.MARKDOWN_V2)
     await bot.pin_chat_message(chat_id, sent.message_id)
 
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+    
