@@ -1,130 +1,154 @@
+import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-import asyncio
+from aiogram.filters import Command
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 import config
+import random
 
-bot = Bot(token=config.BOT_TOKEN, parse_mode="HTML")
+logging.basicConfig(level=logging.INFO)
+
+bot = Bot(token=config.TOKEN, parse_mode="HTML")
 dp = Dispatcher()
 
 deals = {}
 
-def deal_buttons(deal_id):
+def generate_escrow_id():
+    return f"ESCROW-{random.randint(100000, 999999)}"
+
+def confirm_buttons(deal_id, role):
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Seller Confirm", callback_data=f"confirm:seller:{deal_id}")],
-        [InlineKeyboardButton(text="✅ Buyer Confirm", callback_data=f"confirm:buyer:{deal_id}")]
+        [InlineKeyboardButton(text="✅ Seller Confirmed" if role == "seller" else "✅ Seller Confirm", 
+                              callback_data=f"confirm:seller:{deal_id}")],
+        [InlineKeyboardButton(text="✅ Buyer Confirmed" if role == "buyer" else "✅ Buyer Confirm", 
+                              callback_data=f"confirm:buyer:{deal_id}")]
     ])
 
-@dp.message(CommandStart())
-async def start_handler(message: Message):
-    await message.reply("Welcome to Escrow Bot! Use /create to start a new deal (admin only).")
+def fees_buttons(deal_id):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Mine (Seller Pays Full)", callback_data=f"fees:mine:{deal_id}")],
+        [InlineKeyboardButton(text="Split (Both Pay 50/50)", callback_data=f"fees:split:{deal_id}")]
+    ])
 
 @dp.message(Command("create"))
-async def create_deal(message: Message):
-    if message.from_user.id != config.ADMIN_ID:
-        await message.reply("Only the admin can create deals.")
+async def create_command(message: Message):
+    if message.chat.type != "supergroup" and message.chat.type != "group":
+        await message.reply("This command only works in groups.")
         return
+
     await message.reply(
-        "Fill this form inside the group:\n\n"
+        "Fill this form in reply to this message:\n\n"
         "Seller: @username\n"
         "Buyer: @username\n"
-        "Deal Info: Item description\n"
-        "Amount: 50 USDT\n"
-        "Fee: 5 USDT\n"
-        "Time: 24 hours"
+        "Deal Info: description\n"
+        "Amount (In USDT): amount\n"
+        "Time To Complete: hours"
     )
 
-@dp.message(F.text.regexp(r"Seller:\s?@(\w+)\nBuyer:\s?@(\w+)\nDeal Info:\s?(.+)\nAmount:\s?(\d+)\s?USDT\nFee:\s?(\d+)\s?USDT\nTime:\s?(\d+)\s?hours"))
+@dp.message(F.reply_to_message, F.text.regexp(r"Seller: @(\w+)\nBuyer: @(\w+)\nDeal Info: (.+)\nAmount In USDT: (\d+)\nTime To Complete: (\d+)"))
 async def process_deal_form(message: Message):
-    if message.chat.id != config.GROUP_ID:
-        return  # Process only in the group.
+    form = message.text.strip().split("\n")
+    seller = form[0].split("@")[1]
+    buyer = form[1].split("@")[1]
+    deal_info = form[2].split(": ")[1]
+    amount = form[3].split(": ")[1]
+    time = form[4].split(": ")[1]
 
-    lines = message.text.strip().split("\n")
-    seller = lines[0].split("@")[1].strip()
-    buyer = lines[1].split("@")[1].strip()
-    deal_info = lines[2].split(":")[1].strip()
-    amount = lines[3].split(":")[1].strip().replace("USDT", "").strip()
-    fee = lines[4].split(":")[1].strip().replace("USDT", "").strip()
-    time_limit = lines[5].split(":")[1].strip().replace("hours", "").strip()
-
-    deal_id = f"DEAL-{message.message_id}"
+    deal_id = generate_escrow_id()
 
     deals[deal_id] = {
         "seller": f"@{seller}",
         "buyer": f"@{buyer}",
         "deal_info": deal_info,
         "amount": amount,
-        "fee": fee,
-        "time_limit": time_limit,
-        "seller_confirmed": False,
-        "buyer_confirmed": False,
+        "time": time,
+        "confirmed": {"seller": False, "buyer": False},
+        "fees_chosen": False
     }
 
     await message.reply(
-        f"New Deal Created!\n\n"
+        f"✅ Form received!\n\n"
         f"Seller: @{seller}\n"
         f"Buyer: @{buyer}\n"
         f"Deal Info: {deal_info}\n"
-        f"Amount: {amount} USDT\n"
-        f"Fee: {fee} USDT\n"
-        f"Time: {time_limit} hours\n\n"
-        "Waiting for both parties to confirm.",
-        reply_markup=deal_buttons(deal_id)
+        f"Amount (In USDT): {amount}\n"
+        f"Time To Complete: {time}\n\n"
+        "Both of you confirm your roles:",
+        reply_markup=confirm_buttons(deal_id, None)
     )
 
 @dp.callback_query(F.data.startswith("confirm:"))
-async def handle_confirmation(callback: types.CallbackQuery):
+async def confirm_callback(callback: types.CallbackQuery):
     _, role, deal_id = callback.data.split(":")
+    user = callback.from_user.username
 
-    if deal_id not in deals:
+    deal = deals.get(deal_id)
+    if not deal:
         await callback.answer("Deal not found!")
         return
 
-    deal = deals[deal_id]
-    user = f"@{callback.from_user.username}"
-
-    if role == "seller" and user != deal["seller"]:
-        await callback.answer("You are not the seller!")
-        return
-    if role == "buyer" and user != deal["buyer"]:
-        await callback.answer("You are not the buyer!")
+    if (role == "seller" and user != deal['seller'][1:]) or (role == "buyer" and user != deal['buyer'][1:]):
+        await callback.answer(f"Only {role.capitalize()} can confirm.")
         return
 
-    if role == "seller":
-        if deal["seller_confirmed"]:
-            await callback.answer("Seller already confirmed.")
-            return
-        deal["seller_confirmed"] = True
-        await bot.send_message(config.GROUP_ID, f"{deal['seller']} ❄ confirmed the deal. Waiting for {deal['buyer']} to confirm.")
-    elif role == "buyer":
-        if deal["buyer_confirmed"]:
-            await callback.answer("Buyer already confirmed.")
-            return
-        deal["buyer_confirmed"] = True
-        await bot.send_message(config.GROUP_ID, f"{deal['buyer']} ❄ confirmed the deal. Waiting for {deal['seller']} to confirm.")
+    if deal["confirmed"][role]:
+        await callback.answer(f"{role.capitalize()} already confirmed.")
+        return
 
-    if deal["seller_confirmed"] and deal["buyer_confirmed"]:
-        ongoing_message = (
-            f"✅ Deal On-Going\n"
-            f"Deal ID: {deal_id}\n\n"
-            f"Seller: {deal['seller']}\n"
-            f"Buyer: {deal['buyer']}\n"
-            f"Deal Info: {deal['deal_info']}\n"
-            f"Amount: {deal['amount']} USDT\n"
-            f"Fee: {deal['fee']} USDT\n"
-            f"Time: {deal['time_limit']} hours"
+    deal["confirmed"][role] = True
+
+    await bot.send_message(
+        callback.message.chat.id,
+        f"{deal[role]} confirmed the deal. Waiting for {deal['buyer' if role == 'seller' else 'seller']}."
+    )
+
+    if deal["confirmed"]["seller"] and deal["confirmed"]["buyer"]:
+        await bot.send_message(
+            callback.message.chat.id,
+            f"✅ Both confirmed!\n\nWho will pay the fees?",
+            reply_markup=fees_buttons(deal_id)
         )
-        pinned_message = await bot.send_message(config.GROUP_ID, ongoing_message)
-        await bot.pin_chat_message(config.GROUP_ID, pinned_message.message_id)
 
-        await callback.message.edit_reply_markup(reply_markup=None)
+    await callback.message.edit_reply_markup(reply_markup=confirm_buttons(deal_id, role))
 
-    await callback.answer("Confirmation saved.")
+@dp.callback_query(F.data.startswith("fees:"))
+async def fees_callback(callback: types.CallbackQuery):
+    _, choice, deal_id = callback.data.split(":")
+    deal = deals.get(deal_id)
+    if not deal:
+        await callback.answer("Deal not found!")
+        return
 
-async def main():
-    logging.basicConfig(level=logging.INFO)
-    await dp.start_polling(bot)
+    if deal["fees_chosen"]:
+        await callback.answer("Fees already chosen.")
+        return
+
+    deal["fees_chosen"] = True
+
+    if choice == "mine":
+        payer = "Seller"
+        msg = f"{deal['seller']} chose to pay full fees."
+    else:
+        payer = "Split"
+        msg = "Split chosen, both will pay fees equally."
+
+    await bot.send_message(callback.message.chat.id, msg)
+
+    pinned_msg = await bot.send_message(
+        callback.message.chat.id,
+        f"✅ Ongoing Deal - {deal_id}\n\n"
+        f"Seller: {deal['seller']}\n"
+        f"Buyer: {deal['buyer']}\n"
+        f"Deal Info: {deal['deal_info']}\n"
+        f"Amount (In USDT): {deal['amount']}\n"
+        f"Time To Complete: {deal['time']}\n"
+        f"Fees Mode: {payer}",
+    )
+
+    await bot.pin_chat_message(callback.message.chat.id, pinned_msg.message_id)
+
+    await callback.message.edit_reply_markup(reply_markup=None)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    from aiogram import executor
+    executor.start_polling(dp, skip_updates=True)
