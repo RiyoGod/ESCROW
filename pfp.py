@@ -1,89 +1,51 @@
-import aiohttp
-import logging
 import asyncio
+import random
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import InputFile
-from aiogram.filters import Command
-from io import BytesIO
+from aiogram.filters import CommandStart
+from aiogram.types import Message
 
-# BOT CONFIGURATION
-TOKEN = "7782987492:AAGOIiMokMR1tfkCgGbmufjUvwmJvF2MyjY"
-bot = Bot(token=TOKEN)
+TOKEN = "8057286738:AAHlmI-nOSqTjamN6k_PGURzniuLc-7lerM"
+
+bot = Bot(token=TOKEN, parse_mode="HTML")
 dp = Dispatcher()
 
-# IMAGE SOURCES
-ANIME_SOURCES = [
-    "https://api.jikan.moe/v4/anime?q={query}",  # MyAnimeList API
-    "https://api.anilist.co/graphql",           # AniList API (GraphQL)
-    "https://www.zerochan.net/{query}?s=4",     # Zerochan 4K images
-    "https://danbooru.donmai.us/posts.json?tags={query}&limit=5",  # Danbooru (NSFW filter optional)
-    "https://wall.alphacoders.com/search.php?search={query}"  # Wallpaper Abyss
-]
-
-# LOGGING
-logging.basicConfig(level=logging.INFO)
-
-async def fetch_images(query):
-    """Fetch high-quality images from different anime sources."""
-    headers = {"User-Agent": "YorX PFP Bot"}
+# Random Emoji Selection
+async def animate_emoji(message: Message):
+    emojis = ["❤️", "🔥", "🎉"]
+    chosen_emoji = random.choice(emojis)
     
-    for url in ANIME_SOURCES:
-        search_url = url.format(query=query.replace(" ", "+"))
-        
-        async with aiohttp.ClientSession() as session:
-            async with session.get(search_url, headers=headers) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    if data:
-                        images = extract_images(data)
-                        if images:
-                            return images  # Return first valid set of images
+    # Creating a smooth effect by sending one character at a time
+    animated_text = ""
+    for char in chosen_emoji * 5:  # Repeat emoji for effect
+        animated_text += char
+        await message.edit_text(animated_text)
+        await asyncio.sleep(0.2)  # Smooth transition
 
-    return None  # No images found
+# Start Command
+@dp.message(CommandStart())
+async def start_command(message: Message):
+    start_text = f"""
+<b>Hey  — <i>RIO</i>, 💗</b>
 
-def extract_images(data):
-    """Extracts images from API response."""
-    images = []
-    if "data" in data:  # For Jikan (MyAnimeList) API
-        for anime in data["data"]:
-            if "images" in anime:
-                images.append(anime["images"]["jpg"]["large_image_url"])
-    elif isinstance(data, list):  # For Danbooru API
-        for post in data:
-            if "file_url" in post:
-                images.append(post["file_url"])
-    return images[:5]  # Return top 5 images
+⊛ <b>THIS IS NEXIUS MUSIC!</b>
 
-@dp.message(Command("search"))
-async def search_anime(message: types.Message):
-    """Handles /search command to fetch anime PFPs."""
-    query = message.text.replace("/search ", "").strip()
+➜ <b>NEXIUS MUSIC</b> is your personal music companion, here to bring harmony to your day. Enjoy seamless music playback, curated playlists, and effortless control, all at your fingertips.
+
+<b>Supported Platforms:</b> YouTube, Spotify, Resso, Apple Music, and SoundCloud.
+
+⊛ Click on the help button to get information about my modules and commands.
+"""
     
-    if not query:
-        await message.reply("Please enter an anime name! Example: `/search Naruto`")
-        return
+    sent_message = await message.answer(start_text)
+    await asyncio.sleep(1)
     
-    await message.reply(f"🔍 Searching for `{query}` PFPs... Please wait.")
+    # Call the emoji animation function
+    await animate_emoji(sent_message)
 
-    images = await fetch_images(query)
-    
-    if not images:
-        await message.reply("❌ No high-quality PFPs found! Try another anime.")
-        return
-
-    # Send images one by one
-    for img_url in images:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(img_url) as resp:
-                if resp.status == 200:
-                    img_data = await resp.read()
-                    image = InputFile(BytesIO(img_data), filename="anime_pfp.jpg")
-                    await message.answer_photo(photo=image)
-
-# START BOT
+# Run the bot
 async def main():
-    print("🤖 YorX PFP Bot is running...")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
+    import asyncio
     asyncio.run(main())
