@@ -33,6 +33,16 @@ async def add_shadow(client, message):
     user = await client.get_users(target_user)
     shadows.add(user.id)
     await animate_text(message, f"➥ {user.mention} ʜᴀs ʙᴇᴇɴ ʀᴀɪsᴇᴅ ᴛᴏ ᴛʜᴇ sʜᴀᴅᴏᴡ ʀᴀɴᴋs.")
+# ➲ **ᴡʜᴇɴ ʙᴏᴛ sᴛᴀʀᴛs, ɪᴛ sᴇɴᴅs ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ᴛʜᴇ ᴏᴡɴᴇʀ**
+async def start_bot():
+    await app.start()
+    start_message = "**˹ ᴛʜᴇ sʜᴀᴅᴏᴡ ᴍᴏɴᴀʀᴄʜ ʜᴀs ʀᴇᴛᴜʀɴᴇᴅ ˼**\n\n➥ ʙᴏᴛ ɪs ɴᴏᴡ ᴏɴʟɪɴᴇ & ʀᴇᴀᴅʏ."
+    await animate_text(OWNER_ID, start_message)
+    await idle()
+
+# ➲ **sᴛᴀʀᴛ ʙᴏ
+
+
 
 # ➲ ᴄʜᴀɴɢᴇ ɢʀᴏᴜᴘ ɴᴀᴍᴇ & ᴅᴇsᴄʀɪᴘᴛɪᴏɴ
 @app.on_message(filters.command("change") & filters.private & (filters.user(OWNER_ID) | filters.user(list(shadows))))
