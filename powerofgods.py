@@ -43,7 +43,7 @@ async def add_shadow(client, message):
     await animate_text(message, f"➥ {user.mention} ʜᴀs ʙᴇᴇɴ ʀᴀɪsᴇᴅ ᴀs ᴀ sʜᴀᴅᴏᴡ.")
 
 # ➲ ᴄʜᴀɴɢᴇ ɢʀᴏᴜᴘ ɴᴀᴍᴇ & ᴅᴇsᴄʀɪᴘᴛɪᴏɴ
-@app.on_message(filters.command("change") & filters.private & (filters.user(OWNER_ID) | filters.user(shadows)))
+@app.on_message(filters.command("change") & filters.private & (filters.user(OWNER_ID) | filters.user(list(shadows))))
 async def change_group_info(client, message):
     await message.reply_text("➥ ᴇɴᴛᴇʀ ᴛʜᴇ ɢʀᴏᴜᴘ ɴᴀᴍᴇ:")
     group_name = (await client.listen(message.chat.id)).text
