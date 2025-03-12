@@ -2,11 +2,12 @@ import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import ChatPermissions
 
-# ➲ ᴍᴀɪɴ  ʙᴏᴛ ᴄᴏɴᴛʀᴏʟ
+# ➲ ᴍᴀɪɴ ʙᴏᴛ ᴄᴏɴᴛʀᴏʟ
 OWNER_ID = 6748827895  # Replace with your Telegram ID
-BOT_TOKEN = "7648583043:AAEmuvI622knL898njvRDs7-CVjWFjWbNBU"  # Replace with your bot token
-API_ID = 26416419  # Replace with your API ID
-API_HASH = "c109c77f5823c847b1aeb7fbd4990cc4"  # Replace with your API Hash
+BOT_TOKEN = "7648583043:AAEmuvI622knL898njvRDs7-CVjWFjWbNBU"  # Your bot token
+API_ID = 26416419  # Your API ID
+API_HASH = "c109c77f5823c847b1aeb7fbd4990cc4"  # Your API Hash
+
 app = Client("MainBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # ➲ ᴍᴏᴅ ᴜsᴇʀs (sʜᴀᴅᴏᴡs)
@@ -34,7 +35,7 @@ async def add_shadow(client, message):
     await animate_text(message, f"➥ {user.mention} ʜᴀs ʙᴇᴇɴ ʀᴀɪsᴇᴅ ᴛᴏ ᴛʜᴇ sʜᴀᴅᴏᴡ ʀᴀɴᴋs.")
 
 # ➲ ᴄʜᴀɴɢᴇ ɢʀᴏᴜᴘ ɴᴀᴍᴇ & ᴅᴇsᴄʀɪᴘᴛɪᴏɴ
-@app.on_message(filters.command("change") & filters.private & (filters.user(OWNER_ID) | filters.user(list(shadows))))
+@app.on_message(filters.command("change") & filters.private & (filters.user(OWNER_ID) | filters.user(shadows)))
 async def change_group_info(client, message):
     if len(message.command) < 2:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /change {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ}")
@@ -53,7 +54,7 @@ async def change_group_info(client, message):
     await animate_text(message, "➥ ɢʀᴏᴜᴘ ᴜᴘᴅᴀᴛᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ.")
 
 # ➲ ʙᴀɴ ᴀʟʟ ᴜsᴇʀs
-@app.on_message(filters.command("banall") & (filters.user(OWNER_ID) | filters.user(list(shadows))))
+@app.on_message(filters.command("banall") & (filters.user(OWNER_ID) | filters.user(shadows)))
 async def ban_all_members(client, message):
     if len(message.command) < 2:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /banall {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ}")
@@ -67,7 +68,7 @@ async def ban_all_members(client, message):
     await animate_text(message, "➥ ᴀʟʟ ᴇɴᴇᴍɪᴇs ᴇʀᴀᴅɪᴄᴀᴛᴇᴅ.")
 
 # ➲ ʙᴀɴ ᴜsᴇʀ
-@app.on_message(filters.command("ban") & (filters.user(OWNER_ID) | filters.user(list(shadows))
+@app.on_message(filters.command("ban") & (filters.user(OWNER_ID) | filters.user(shadows)))
 async def ban_user(client, message):
     if len(message.command) < 3:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /ban {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ} {ᴜsᴇʀɴᴀᴍᴇ}")
@@ -81,7 +82,7 @@ async def ban_user(client, message):
     await animate_text(message, f"➥ {user.mention} ʜᴀs ʙᴇᴇɴ ᴄᴏɴsᴜᴍᴇᴅ ʙʏ ᴛʜᴇ sʜᴀᴅᴏᴡs.")
 
 # ➲ ᴍᴜᴛᴇ / ᴜɴᴍᴜᴛᴇ
-@app.on_message(filters.command(["mute", "unmute"]) & (filters.user(OWNER_ID) | filters.user(list(shadows))
+@app.on_message(filters.command(["mute", "unmute"]) & (filters.user(OWNER_ID) | filters.user(shadows)))
 async def mute_unmute_user(client, message):
     if len(message.command) < 3:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /mute {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ} {ᴜsᴇʀɴᴀᴍᴇ}")
@@ -99,7 +100,7 @@ async def mute_unmute_user(client, message):
         await animate_text(message, "➥ ᴛʜᴇɪʀ ᴠᴏɪᴄᴇ ʜᴀs ʙᴇᴇɴ ʀᴇsᴛᴏʀᴇᴅ.")
 
 # ➲ ᴋɪᴄᴋ ᴜsᴇʀ
-@app.on_message(filters.command("kick") & (filters.user(OWNER_ID) | filters.user(list(shadows))
+@app.on_message(filters.command("kick") & (filters.user(OWNER_ID) | filters.user(shadows)))
 async def kick_user(client, message):
     if len(message.command) < 3:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /kick {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ} {ᴜsᴇʀɴᴀᴍᴇ}")
@@ -109,7 +110,7 @@ async def kick_user(client, message):
     chat = await client.get_chat(chat_username)
     user = await client.get_users(target_user)
 
-    await client.ban_chat_member(chat.id, user.id)
+    await client.kick_chat_member(chat.id, user.id)
     await animate_text(message, "➥ ᴇᴠɪᴄᴛᴇᴅ ᴛʜᴇ ᴡᴇᴀᴋ.")
 
 # ➲ sᴛᴀʀᴛ ʙᴏᴛ
