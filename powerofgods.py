@@ -35,7 +35,7 @@ async def add_shadow(client, message):
     await animate_text(message, f"➥ {user.mention} ʜᴀs ʙᴇᴇɴ ʀᴀɪsᴇᴅ ᴛᴏ ᴛʜᴇ sʜᴀᴅᴏᴡ ʀᴀɴᴋs.")
 
 # ➲ ᴄʜᴀɴɢᴇ ɢʀᴏᴜᴘ ɴᴀᴍᴇ & ᴅᴇsᴄʀɪᴘᴛɪᴏɴ
-@app.on_message(filters.command("change") & filters.private & (filters.user(OWNER_ID) | filters.user(shadows)))
+@app.on_message(filters.command("change") & filters.private & (filters.user(OWNER_ID) | filters.user(list(shadows))))
 async def change_group_info(client, message):
     if len(message.command) < 2:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /change {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ}")
@@ -54,7 +54,7 @@ async def change_group_info(client, message):
     await animate_text(message, "➥ ɢʀᴏᴜᴘ ᴜᴘᴅᴀᴛᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ.")
 
 # ➲ ʙᴀɴ ᴀʟʟ ᴜsᴇʀs
-@app.on_message(filters.command("banall") & (filters.user(OWNER_ID) | filters.user(shadows)))
+@app.on_message(filters.command("banall") & (filters.user(OWNER_ID) | filters.user(list(shadows))))
 async def ban_all_members(client, message):
     if len(message.command) < 2:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /banall {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ}")
@@ -68,7 +68,7 @@ async def ban_all_members(client, message):
     await animate_text(message, "➥ ᴀʟʟ ᴇɴᴇᴍɪᴇs ᴇʀᴀᴅɪᴄᴀᴛᴇᴅ.")
 
 # ➲ ʙᴀɴ ᴜsᴇʀ
-@app.on_message(filters.command("ban") & (filters.user(OWNER_ID) | filters.user(shadows)))
+@app.on_message(filters.command("ban") & (filters.user(OWNER_ID) | filters.user(list(shadows))))
 async def ban_user(client, message):
     if len(message.command) < 3:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /ban {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ} {ᴜsᴇʀɴᴀᴍᴇ}")
@@ -82,7 +82,7 @@ async def ban_user(client, message):
     await animate_text(message, f"➥ {user.mention} ʜᴀs ʙᴇᴇɴ ᴄᴏɴsᴜᴍᴇᴅ ʙʏ ᴛʜᴇ sʜᴀᴅᴏᴡs.")
 
 # ➲ ᴍᴜᴛᴇ / ᴜɴᴍᴜᴛᴇ
-@app.on_message(filters.command(["mute", "unmute"]) & (filters.user(OWNER_ID) | filters.user(shadows)))
+@app.on_message(filters.command(["mute", "unmute"]) & (filters.user(OWNER_ID) | filters.user(list(shadows))))
 async def mute_unmute_user(client, message):
     if len(message.command) < 3:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /mute {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ} {ᴜsᴇʀɴᴀᴍᴇ}")
@@ -100,7 +100,7 @@ async def mute_unmute_user(client, message):
         await animate_text(message, "➥ ᴛʜᴇɪʀ ᴠᴏɪᴄᴇ ʜᴀs ʙᴇᴇɴ ʀᴇsᴛᴏʀᴇᴅ.")
 
 # ➲ ᴋɪᴄᴋ ᴜsᴇʀ
-@app.on_message(filters.command("kick") & (filters.user(OWNER_ID) | filters.user(shadows)))
+@app.on_message(filters.command("kick") & (filters.user(OWNER_ID) | filters.user(list(shadows))))
 async def kick_user(client, message):
     if len(message.command) < 3:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /kick {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ} {ᴜsᴇʀɴᴀᴍᴇ}")
