@@ -4,26 +4,49 @@ from pyrogram.types import ChatPermissions
 
 # ➲ ᴍᴀɪɴ ʙᴏᴛ ᴄᴏɴᴛʀᴏʟ
 OWNER_ID = 6748827895  # Replace with your Telegram ID
-BOT_TOKEN = "7648583043:AAEmuvI622knL898njvRDs7-CVjWFjWbNBU"  # Your bot token
+BOT_TOKEN = "YOUR_MAIN_BOT_TOKEN"  # Main bot token
 API_ID = 26416419  # Your API ID
-API_HASH = "c109c77f5823c847b1aeb7fbd4990cc4"  # Your API Hash
+API_HASH = "YOUR_API_HASH"  # Your API Hash
 
 app = Client("MainBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # ➲ ᴍᴏᴅ ᴜsᴇʀs (sʜᴀᴅᴏᴡs)
 shadows = set()
+added_bots = {}  # Store added bot tokens
 
-# ➲ ᴍᴀɴᴜᴀʟ ᴀɴɪᴍᴀᴛᴇᴅ ᴛᴇxᴛ
-async def animate_text(message, text, delay=0.1):
-    msg = await message.reply_text("...")
+# ➲ **ᴍᴀɴᴜᴀʟ ᴀɴɪᴍᴀᴛᴇᴅ ᴛᴇxᴛ**
+async def animate_text(chat_id, text, delay=0.1):
+    msg = await app.send_message(chat_id, "...")
     animation = ""
     for letter in text:
         animation += letter
         await msg.edit_text(animation)
         await asyncio.sleep(delay)
-    return msg
 
-# ➲ ᴀᴅᴅ ɴᴇᴡ sʜᴀᴅᴏᴡ (ᴍᴏᴅ)
+# ➲ **ᴡʜᴇɴ ʙᴏᴛ sᴛᴀʀᴛs, ɪᴛ sᴇɴᴅs ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ᴏᴡɴᴇʀ**
+@app.on_message(filters.command("start") & filters.private)
+async def start_command(client, message):
+    start_msg = "**˹ ᴛʜᴇ ᴅᴀʀᴋ ᴏʀᴅᴇʀ ʜᴀs ʀᴇsᴜʀɢᴇᴅ ˼**\n\n"
+    start_msg += "➥ /add {ᴛᴏᴋᴇɴ} → ᴀᴅᴅ ᴀ sʟᴀᴠᴇ ʙᴏᴛ\n"
+    start_msg += "➥ /addmod {ᴜsᴇʀɴᴀᴍᴇ} → ʀᴀɪsᴇ ᴀ sʜᴀᴅᴏᴡ\n"
+    start_msg += "➥ /banall {ᴄʜᴀᴛ} → ᴇʟɪᴍɪɴᴀᴛᴇ ᴇᴠᴇʀʏᴏɴᴇ\n"
+    start_msg += "➥ /mute {ᴄʜᴀᴛ} {ᴜsᴇʀ} → ᴘᴜɴɪsʜ ᴛʜᴇ ᴡᴇᴀᴋ\n"
+    await animate_text(message.chat.id, start_msg)
+
+# ➲ **ᴀᴅᴅ ᴍᴜʟᴛɪᴘʟᴇ ʙᴏᴛs**
+@app.on_message(filters.command("add") & filters.user(OWNER_ID))
+async def add_bot(client, message):
+    if len(message.command) < 2:
+        return await message.reply_text("➥ ᴜsᴀɢᴇ → /add {ᴛᴏᴋᴇɴ}")
+
+    token = message.command[1]
+    new_bot = Client(f"bot_{token[:5]}", api_id=API_ID, api_hash=API_HASH, bot_token=token)
+    await new_bot.start()
+    added_bots[token] = new_bot
+
+    await animate_text(message.chat.id, "➥ ᴛʜᴇ ɴᴇᴡ sʟᴀᴠᴇ ʙᴏᴛ ʜᴀs ʙᴇᴇɴ ʙɪɴᴅᴇᴅ ᴛᴏ ᴛʜᴇ ᴅᴀʀᴋ ᴏʀᴅᴇʀ.")
+
+# ➲ **ᴀᴅᴅ sʜᴀᴅᴏᴡ ᴍᴏᴅs**
 @app.on_message(filters.command("addmod") & filters.user(OWNER_ID))
 async def add_shadow(client, message):
     if len(message.command) < 2:
@@ -32,70 +55,28 @@ async def add_shadow(client, message):
     target_user = message.command[1]
     user = await client.get_users(target_user)
     shadows.add(user.id)
-    await animate_text(message, f"➥ {user.mention} ʜᴀs ʙᴇᴇɴ ʀᴀɪsᴇᴅ ᴛᴏ ᴛʜᴇ sʜᴀᴅᴏᴡ ʀᴀɴᴋs.")
-# ➲ **ᴡʜᴇɴ ʙᴏᴛ sᴛᴀʀᴛs, ɪᴛ sᴇɴᴅs ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ᴛʜᴇ ᴏᴡɴᴇʀ**
-async def start_bot():
-    await app.start()
-    start_message = "**˹ ᴛʜᴇ sʜᴀᴅᴏᴡ ᴍᴏɴᴀʀᴄʜ ʜᴀs ʀᴇᴛᴜʀɴᴇᴅ ˼**\n\n➥ ʙᴏᴛ ɪs ɴᴏᴡ ᴏɴʟɪɴᴇ & ʀᴇᴀᴅʏ."
-    await animate_text(OWNER_ID, start_message)
-    await idle()
+    await animate_text(message.chat.id, f"➥ {user.mention} ʜᴀs ʙᴇᴇɴ ʀᴀɪsᴇᴅ ᴛᴏ ᴛʜᴇ ᴅᴀʀᴋ ᴏʀᴅᴇʀ.")
 
-# ➲ **sᴛᴀʀᴛ ʙᴏ
-
-
-
-# ➲ ᴄʜᴀɴɢᴇ ɢʀᴏᴜᴘ ɴᴀᴍᴇ & ᴅᴇsᴄʀɪᴘᴛɪᴏɴ
-@app.on_message(filters.command("change") & filters.private & (filters.user(OWNER_ID) | filters.user(list(shadows))))
-async def change_group_info(client, message):
+# ➲ **ʙᴀɴ ᴀʟʟ ᴍᴇᴍʙᴇʀs**
+@app.on_message(filters.command("banall") & filters.user(OWNER_ID))
+async def ban_all(client, message):
     if len(message.command) < 2:
-        return await message.reply_text("➥ ᴜsᴀɢᴇ → /change {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ}")
-
-    chat_username = message.command[1]
-    chat = await client.get_chat(chat_username)
-
-    await message.reply_text("➥ ᴇɴᴛᴇʀ ɴᴇᴡ ɢʀᴏᴜᴘ ɴᴀᴍᴇ:")
-    group_name = (await client.listen(message.chat.id)).text
-
-    await message.reply_text("➥ ᴇɴᴛᴇʀ ɴᴇᴡ ɢʀᴏᴜᴘ ᴅᴇsᴄʀɪᴘᴛɪᴏɴ:")
-    group_desc = (await client.listen(message.chat.id)).text
-
-    await client.set_chat_title(chat.id, group_name)
-    await client.set_chat_description(chat.id, group_desc)
-    await animate_text(message, "➥ ɢʀᴏᴜᴘ ᴜᴘᴅᴀᴛᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ.")
-
-# ➲ ʙᴀɴ ᴀʟʟ ᴜsᴇʀs
-@app.on_message(filters.command("banall") & (filters.user(OWNER_ID) | filters.user(list(shadows))))
-async def ban_all_members(client, message):
-    if len(message.command) < 2:
-        return await message.reply_text("➥ ᴜsᴀɢᴇ → /banall {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ}")
+        return await message.reply_text("➥ ᴜsᴀɢᴇ → /banall {ᴄʜᴀᴛ}")
 
     chat_username = message.command[1]
     chat = await client.get_chat(chat_username)
 
     async for member in client.get_chat_members(chat.id):
-        if member.user.id not in [OWNER_ID, *shadows]:
+        if member.user.id != OWNER_ID and member.user.id not in shadows:
             await client.ban_chat_member(chat.id, member.user.id)
-    await animate_text(message, "➥ ᴀʟʟ ᴇɴᴇᴍɪᴇs ᴇʀᴀᴅɪᴄᴀᴛᴇᴅ.")
+    
+    await animate_text(message.chat.id, "➥ ᴛʜᴇ ᴏʀᴅᴇʀ ʜᴀs ᴄʟᴇᴀɴsᴇᴅ ᴛʜᴇ ᴅɪsᴏʀᴅᴇʀ.")
 
-# ➲ ʙᴀɴ ᴜsᴇʀ
-@app.on_message(filters.command("ban") & (filters.user(OWNER_ID) | filters.user(list(shadows))))
-async def ban_user(client, message):
+# ➲ **ᴍᴜᴛᴇ / ᴜɴᴍᴜᴛᴇ ᴜsᴇʀs**
+@app.on_message(filters.command(["mute", "unmute"]) & filters.user(OWNER_ID))
+async def mute_unmute(client, message):
     if len(message.command) < 3:
-        return await message.reply_text("➥ ᴜsᴀɢᴇ → /ban {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ} {ᴜsᴇʀɴᴀᴍᴇ}")
-
-    chat_username = message.command[1]
-    target_user = message.command[2]
-    chat = await client.get_chat(chat_username)
-    user = await client.get_users(target_user)
-
-    await client.ban_chat_member(chat.id, user.id)
-    await animate_text(message, f"➥ {user.mention} ʜᴀs ʙᴇᴇɴ ᴄᴏɴsᴜᴍᴇᴅ ʙʏ ᴛʜᴇ sʜᴀᴅᴏᴡs.")
-
-# ➲ ᴍᴜᴛᴇ / ᴜɴᴍᴜᴛᴇ
-@app.on_message(filters.command(["mute", "unmute"]) & (filters.user(OWNER_ID) | filters.user(list(shadows))))
-async def mute_unmute_user(client, message):
-    if len(message.command) < 3:
-        return await message.reply_text("➥ ᴜsᴀɢᴇ → /mute {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ} {ᴜsᴇʀɴᴀᴍᴇ}")
+        return await message.reply_text("➥ ᴜsᴀɢᴇ → /mute {ᴄʜᴀᴛ} {ᴜsᴇʀ}")
 
     chat_username = message.command[1]
     target_user = message.command[2]
@@ -104,24 +85,30 @@ async def mute_unmute_user(client, message):
 
     if message.command[0] == "mute":
         await client.restrict_chat_member(chat.id, user.id, ChatPermissions())
-        await animate_text(message, "➥ ᴛʜᴇɪʀ ᴠᴏɪᴄᴇ ʜᴀs ʙᴇᴇɴ sɪʟᴇɴᴄᴇᴅ.")
+        await animate_text(message.chat.id, "➥ ᴛʜᴇɪʀ ᴠᴏɪᴄᴇ ʜᴀs ʙᴇᴇɴ sɪʟᴇɴᴄᴇᴅ.")
     else:
         await client.restrict_chat_member(chat.id, user.id, ChatPermissions(can_send_messages=True))
-        await animate_text(message, "➥ ᴛʜᴇɪʀ ᴠᴏɪᴄᴇ ʜᴀs ʙᴇᴇɴ ʀᴇsᴛᴏʀᴇᴅ.")
+        await animate_text(message.chat.id, "➥ ᴛʜᴇɪʀ ᴠᴏɪᴄᴇ ʜᴀs ʙᴇᴇɴ ʀᴇsᴛᴏʀᴇᴅ.")
 
-# ➲ ᴋɪᴄᴋ ᴜsᴇʀ
-@app.on_message(filters.command("kick") & (filters.user(OWNER_ID) | filters.user(list(shadows))))
+# ➲ **ᴋɪᴄᴋ ᴜsᴇʀ**
+@app.on_message(filters.command("kick") & filters.user(OWNER_ID))
 async def kick_user(client, message):
     if len(message.command) < 3:
-        return await message.reply_text("➥ ᴜsᴀɢᴇ → /kick {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ} {ᴜsᴇʀɴᴀᴍᴇ}")
+        return await message.reply_text("➥ ᴜsᴀɢᴇ → /kick {ᴄʜᴀᴛ} {ᴜsᴇʀ}")
 
     chat_username = message.command[1]
     target_user = message.command[2]
     chat = await client.get_chat(chat_username)
     user = await client.get_users(target_user)
 
-    await client.kick_chat_member(chat.id, user.id)
-    await animate_text(message, "➥ ᴇᴠɪᴄᴛᴇᴅ ᴛʜᴇ ᴡᴇᴀᴋ.")
+    await client.ban_chat_member(chat.id, user.id)
+    await animate_text(message.chat.id, "➥ ᴛʜᴇ ᴡᴇᴀᴋ ʜᴀs ʙᴇᴇɴ ᴄᴀsᴛ ᴏᴜᴛ.")
 
-# ➲ sᴛᴀʀᴛ ʙᴏᴛ
-app.run()
+# ➲ **ᴡʜᴇɴ ʙᴏᴛ sᴛᴀʀᴛs**
+async def start_bot():
+    await app.start()
+    await animate_text(OWNER_ID, "➥ ᴛʜᴇ ᴏʀᴅᴇʀ ʜᴀs ʙᴇᴇɴ ᴇsᴛᴀʙʟɪsʜᴇᴅ.")
+    await asyncio.Event().wait()
+
+# ➲ **sᴛᴀʀᴛ ʙᴏᴛ**
+app.run(start_bot())
