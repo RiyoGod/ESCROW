@@ -53,7 +53,7 @@ async def change_group_info(client, message):
     await animate_text(message, "➥ ɢʀᴏᴜᴘ ᴜᴘᴅᴀᴛᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ.")
 
 # ➲ ʙᴀɴ ᴀʟʟ ᴜsᴇʀs
-@app.on_message(filters.command("banall") & (filters.user(OWNER_ID) | filters.user(shadows)))
+@app.on_message(filters.command("banall") & (filters.user(OWNER_ID) | filters.user(list(shadows))))
 async def ban_all_members(client, message):
     if len(message.command) < 2:
         return await message.reply_text("➥ ᴜsᴀɢᴇ → /banall {ᴄʜᴀᴛ.ᴜsᴇʀɴᴀᴍᴇ}")
