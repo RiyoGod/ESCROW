@@ -5,7 +5,13 @@ from pyrogram.types import ChatPermissions
 # ➲ ᴍᴀɪɴ ʙᴏᴛ ᴄᴏɴᴛʀᴏʟ
 OWNER_ID = 6748827895  # Replace with your Telegram ID
 BOT_TOKEN = "7648583043:AAEmuvI622knL898njvRDs7-CVjWFjWbNBU"  # Replace with your bot token
-app = Client("MainBot", bot_token=BOT_TOKEN)
+app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+
+api_id = 26416419  # Replace with your actual API ID
+api_hash = "c109c77f5823c847b1aeb7fbd4990cc4"  # Replace with your actual API HASH
+bot_token = "7648583043:AAEmuvI622knL898njvRDs7-CVjWFjWbNBU"  # Replace with your actual Bot Token
+
+
 
 # ➲ sᴛᴏʀᴇ ᴀᴅᴅᴇᴅ ʙᴏᴛs & sʜᴀᴅᴏᴡs
 added_bots = {}
