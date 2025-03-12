@@ -4,7 +4,7 @@ from pyrogram.types import Message, ChatInviteLink
 # Telegram API credentials
 API_ID = 26416419  # Replace with your API ID
 API_HASH = "c109c77f5823c847b1aeb7fbd4990cc4"  # Replace with your API hash
-BOT_TOKEN = "7599525616:AAHNlIybSRF6LBhINcJ3eydIwmlXfeXdmhY"  # Replace with your bot token
+BOT_TOKEN = "7677784377:AAFIc3hbazzg9XHnH1OUUrUGGTSeq9NLrK8"  # Replace with your bot token
 
 app = Client("silent_ban_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
